@@ -2,29 +2,39 @@
 FROM node:20-bullseye
 
 WORKDIR /app
-ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Enable Yarn
-RUN corepack enable && corepack prepare yarn@stable --activate
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 
 # Install Ganache CLI & jq
-RUN yarn global add ganache && apt-get update && apt-get install -y jq
+# RUN yarn global add ganache
 
 # Clone Ethernaut source
-RUN git clone --depth 1 https://github.com/OpenZeppelin/ethernaut.git ./
-
-# Set ACTIVE_NETWORK to NETWORKS.LOCAL
-RUN sed -i 's/ACTIVE_NETWORK.*/ACTIVE_NETWORK = NETWORKS.LOCAL;/' client/src/constants.js
+RUN git clone https://github.com/OpenZeppelin/ethernaut.git ./
 
 # Install dependencies
-RUN yarn install --frozen-lockfile
+RUN yarn install
 
-# Expose UI + Ganache RPC
+# Download foundry installer `foundryup`
+RUN apt-get update && apt-get install -y curl
+RUN curl -L https://foundry.paradigm.xyz | bash 
+# add Foundry to PATH for all subsequent layers
+ENV PATH="/root/.foundry/bin:${PATH}"
+RUN foundryup
+
+# Set ACTIVE_NETWORK to NETWORKS.LOCAL
+RUN sed -i '/let id_to_network = {}/i export const ACTIVE_NETWORK = NETWORKS.LOCAL;' client/src/constants.js
+
+# Expose UI + Anvil RPC
 EXPOSE 3000 8545
 
+# Set NODE_OPTIONS to use legacy OpenSSL provider
+ENV NODE_OPTIONS="--openssl-legacy-provider"
+
+# Compile Foundry contracts
+RUN yarn compile:contracts
+
 # Start Ganache, deploy contracts, then run the UI
-CMD ganache --host 0.0.0.0 --port 8545 --chainId 31337 --accounts 10 --defaultBalanceEther 1000 --deterministic & \
-    sleep 3 && \
-    yarn compile:contracts && \
-    yarn deploy:contracts && \
+CMD yarn network & \
+    yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
     yarn start:ethernaut
