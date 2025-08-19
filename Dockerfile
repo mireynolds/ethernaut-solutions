@@ -25,8 +25,11 @@ RUN foundryup
 # Set ACTIVE_NETWORK to NETWORKS.LOCAL
 RUN sed -i '/let id_to_network = {}/i export const ACTIVE_NETWORK = NETWORKS.LOCAL;' client/src/constants.js
 
-# Expose UI + Anvil RPC
-EXPOSE 3000 8545
+# Expose UI
+EXPOSE 3000
+
+# Expose Anvil
+EXPOSE 8545
 
 # Set NODE_OPTIONS to use legacy OpenSSL provider
 ENV NODE_OPTIONS="--openssl-legacy-provider"
@@ -35,6 +38,6 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 RUN yarn compile:contracts
 
 # Start Ganache, deploy contracts, then run the UI
-CMD yarn network & \
+CMD yarn network -- --host 0.0.0.0 --port 8545 & \
     yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
     yarn start:ethernaut
