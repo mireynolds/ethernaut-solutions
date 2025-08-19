@@ -6,13 +6,10 @@ import "forge-std/console2.sol";
 
 interface Ethernaut {
     event LevelInstanceCreatedLog(address indexed player, address indexed instance, address indexed level);
-
     event LevelCompletedLog(address indexed player, address indexed instance, address indexed level);
 
     function createLevelInstance(address level) external payable;
-
     function submitLevelInstance(address payable _instance) external;
-
 }
 
 interface Level0 {
@@ -27,7 +24,6 @@ interface Level0 {
     function authenticate(string memory) external;
 }
 
-
 contract EthernautTest is Test {
     Ethernaut ethernaut;
 
@@ -36,7 +32,7 @@ contract EthernautTest is Test {
     function _getAddress(string memory _addressCode) internal view returns (address _address) {
         // Read addresses.log and parse ethernaut address
         string memory addressesJson = vm.readFile("addresses.log");
-        _address = vm.parseJsonAddress(addressesJson, string.concat(".",_addressCode));
+        _address = vm.parseJsonAddress(addressesJson, string.concat(".", _addressCode));
     }
 
     function setUp() public {
@@ -47,23 +43,23 @@ contract EthernautTest is Test {
         vm.recordLogs();
         ethernaut.createLevelInstance(_getAddress(_level));
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        for (uint i = 0; i < entries.length; i++) {
-        if (entries[i].topics[0] == Ethernaut.LevelInstanceCreatedLog.selector) {
-            levelInstance[_level] = address(uint160(uint256(entries[i].topics[2])));
+        for (uint256 i = 0; i < entries.length; i++) {
+            if (entries[i].topics[0] == Ethernaut.LevelInstanceCreatedLog.selector) {
+                levelInstance[_level] = address(uint160(uint256(entries[i].topics[2])));
+            }
+            delete entries[i];
         }
-        delete entries[i];
-    }
     }
 
-    function _submitLevel(string memory _level) internal returns (bool){
+    function _submitLevel(string memory _level) internal returns (bool) {
         vm.recordLogs();
         ethernaut.submitLevelInstance(payable(levelInstance[_level]));
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        for (uint i = 0; i < entries.length; i++) {
-        if (entries[i].topics[0] == Ethernaut.LevelCompletedLog.selector) {
-            return true;
+        for (uint256 i = 0; i < entries.length; i++) {
+            if (entries[i].topics[0] == Ethernaut.LevelCompletedLog.selector) {
+                return true;
+            }
         }
-    }
     }
 
     function testLevel0() public {
