@@ -11,7 +11,7 @@ contract Level4Test is EthernautTest {
     function testLevel4() public {
         _createLevel("4");
         Level4 levelInstance4 = Level4(levelInstance["4"]);
-        
+
         // tx.origin is not the same as msg.sender from a contract
         levelInstance4.changeOwner(address(this));
 
