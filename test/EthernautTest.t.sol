@@ -51,7 +51,6 @@ contract EthernautTest is Test {
             if (entries[i].topics[0] == Ethernaut.LevelInstanceCreatedLog.selector) {
                 levelInstance[_level] = address(uint160(uint256(entries[i].topics[2])));
             }
-            delete entries[i];
         }
     }
 
