@@ -40,14 +40,17 @@ contract EthernautTest is Test {
     }
 
     function _createLevel(string memory _level) internal {
+        _createLevel(_level, 0);
+    }
+
+    function _createLevel(string memory _level, uint256 amount) internal {
         vm.recordLogs();
-        ethernaut.createLevelInstance(_getAddress(_level));
+        ethernaut.createLevelInstance{value: amount}(_getAddress(_level));
         Vm.Log[] memory entries = vm.getRecordedLogs();
         for (uint256 i = 0; i < entries.length; i++) {
             if (entries[i].topics[0] == Ethernaut.LevelInstanceCreatedLog.selector) {
                 levelInstance[_level] = address(uint160(uint256(entries[i].topics[2])));
             }
-            delete entries[i];
         }
     }
 
