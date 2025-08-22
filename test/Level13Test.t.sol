@@ -16,7 +16,7 @@ contract Level13Test is EthernautTest {
         // For totalGas = 1,000,000, solve gas = 0
         // See what value the call fails with a large fixed gas value
         // Using foundry debugger with level13.sh
-        // Stepping through to the call with REVERT 
+        // Stepping through to the call with REVERT
         // We can see the value of opcode GAS / 5A on the stack is 0x0f4146
         // 0x0f4146 = 999750
         // But, we need gasleft() % 8191 = 0
@@ -38,13 +38,10 @@ contract Level13Test is EthernautTest {
         vm.prank(msg.sender, address(this));
         try levelInstance13.enter{gas: totalGas}(key) returns (bool) {
             console2.log("enter success");
-        }
-        catch (bytes memory reason) {
+        } catch (bytes memory reason) {
             revert("enter failed");
         }
 
-
         require(_submitLevel("13"));
     }
-
 }
