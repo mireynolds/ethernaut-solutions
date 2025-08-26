@@ -32,9 +32,7 @@ contract Level16Test is EthernautTest {
         levelInstance16.setFirstTime(uint256(uint160(address(setLevel16Owner))));
         // Overwrite the owner slot
         levelInstance16.setFirstTime(uint256(uint160(address(this))));
-        
 
         require(_submitLevel("16"));
     }
-
 }
