@@ -49,5 +49,4 @@ contract Level18Test is EthernautTest {
 
         require(_submitLevel("18"));
     }
-
 }
