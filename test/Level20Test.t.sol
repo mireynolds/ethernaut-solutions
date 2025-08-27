@@ -22,9 +22,8 @@ contract Level20Test is EthernautTest {
         require(_submitLevel("20"));
     }
 
-    receive () external payable {
+    receive() external payable {
         // This will keep the contract reentering until it runs out of gas
         level20Instance.withdraw();
     }
-
 }
