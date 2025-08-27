@@ -16,9 +16,9 @@ contract Level17Test is EthernautTest {
         // For a standard CREATE, this is keccak256(rlp([sender,nonce]))[12:]
         // RLP([deployer, 0]) = 0xd6 0x94 <addr> 0x80
         bytes memory rlp = bytes.concat(
-            hex"d694",            // list prefix 0xd6 + addr prefix 0x94
+            hex"d694", // list prefix 0xd6 + addr prefix 0x94
             abi.encodePacked(levelInstance["17"]),
-            hex"01"               // nonce 1 for a contract creating a contract
+            hex"01" // nonce 1 for a contract creating a contract
         );
         // The token address is the last 20 bytes of the hash of the RLP encoding
         address tokenAddress = address(uint160(uint256(keccak256(rlp))));
@@ -27,5 +27,4 @@ contract Level17Test is EthernautTest {
 
         require(_submitLevel("17"));
     }
-
 }
