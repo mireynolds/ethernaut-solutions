@@ -4,4 +4,4 @@ docker run --rm \
     -w /work \
     --entrypoint bash \
     ghcr.io/foundry-rs/foundry:latest \
-    -lc 'forge fmt $(git ls-files "*.sol")'
+    -lc 'git ls-files -z -- "*.sol" | xargs -0 -r forge fmt'
