@@ -30,7 +30,7 @@ Solutions are given for each level. However, some of the levels have many possib
 ### Clone this repository
 
 ```bash
-git clone https://github.com/mireynolds/ethernaut && cd ethernaut
+git clone https://github.com/mireynolds/ethernaut-solutions && cd ethernaut-solutions
 ```
 
 ### Grant permissions to run the scripts
