@@ -4,16 +4,7 @@ pragma solidity ^0.8.30;
 import "./EthernautTest.t.sol";
 
 interface Level33 {
-    function currentCrateId() external view returns (uint256);
-    function carousel(uint256) external view returns (uint256);
-
-    error AnimalNameTooLong();
-
-    function setAnimalAndSpin(string calldata) external;
-
     function changeAnimal(string calldata, uint256) external;
-
-    function encodeAnimalName(string calldata) external pure returns (uint256);
 }
 
 contract Level33Test is EthernautTest {
