@@ -1,0 +1,82 @@
+# Ethernaut Solutions with Foundry
+
+This repository contains some possible solutions to [Ethernaut](https://github.com/OpenZeppelin/ethernaut), a series of smart contract security puzzles by [OpenZeppelin](https://ethernaut.openzeppelin.com).
+I approached the challenges by writing [Foundry](https://getfoundry.sh/) tests that demonstrate solutions for each level.
+
+In addition, this repo provides bash scripts and a Dockerfile to spin up a **local Ethernaut instance** - both the contracts (on a local Anvil test RPC on port 8545) and the web UI (on port 3000) - so you can practice and test solutions in a self-contained local environment.
+
+Once that Ethernaut instance is spun up, there is a further Dockerfile which is a Foundry test and build image which forks the chain from that local RPC and runs the test solutions in this repository.
+
+The only dependencies are docker, git, and bash. There is no need to install foundry.
+
+The purpose of this repo is primarily educational, but you might find the container version of Ethernaut useful.
+
+Solutions are given for each level. However, some of the levels have many possible solutions beyond those shown here.
+
+## Repository Structure
+
+- **`test/`** Foundry tests, one per Ethernaut level.
+- **`test/Ethernaut.t.sol`** Provides the base test for interacting with Ethernaut in this way.
+- **`./`** Contains the scripts and Dockerfiles detailed below.
+
+## Getting Started
+
+### Prerequisites
+
+- Docker
+- Git
+- Bash
+
+### Clone this repository
+
+```bash
+git clone https://github.com/mireynolds/ethernaut && cd ethernaut
+```
+
+### Grant permissions to run the scripts
+
+```bash
+chmod +x launch.sh test.sh level13.sh forgefmt.sh
+```
+
+### Launch Local Ethernaut (Web UI + RPC)
+
+```bash
+./launch.sh
+```
+
+- RPC at http://localhost:8545 with Ethernaut deployed.
+
+- Web UI at http://localhost:3000 to interact with the challenges in your browser.
+
+These are both contained within one docker container.
+
+### Run Foundry Tests
+
+```bash
+./test.sh
+```
+
+Runs all the foundry tests in `test/` using a Foundry build and test docker image.
+
+## Other Scripts
+
+### Level 13
+
+It was useful to use the Foundry debugger to solve this level.
+
+The corresponding script enters the Foundry debugger using a docker image for that test.
+
+```bash
+./level13.sh
+```
+
+### Forge formatting
+
+The Solidity files in this repository have been formatted with the Foundry formatting tool.
+
+The corresponding script formats all the solidity files tracked by git in this repository inside a foundry docker image.
+
+```bash
+./forgefmt.sh
+```
