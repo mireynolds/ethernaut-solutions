@@ -6,9 +6,6 @@ WORKDIR /app
 # Enable Yarn
 RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 
-# Install Ganache CLI & jq
-# RUN yarn global add ganache
-
 # Clone Ethernaut source
 RUN git clone https://github.com/OpenZeppelin/ethernaut.git ./
 
@@ -18,7 +15,8 @@ RUN yarn install
 # Download foundry installer `foundryup`
 RUN apt-get update && apt-get install -y curl
 RUN curl -L https://foundry.paradigm.xyz | bash 
-# add Foundry to PATH for all subsequent layers
+
+# add Foundry to PATH for all subsequent layers then install foundry
 ENV PATH="/root/.foundry/bin:${PATH}"
 RUN foundryup
 
@@ -37,7 +35,8 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 # Compile Foundry contracts
 RUN yarn compile:contracts
 
-# Start Ganache, deploy contracts, then run the UI
+# Start RPC, deploy contracts, then run the UI
+# We also log deployed addresses to ./addresses.log in the user directory
 CMD yarn network -- --host 0.0.0.0 --port 8545 & \
     yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
     yarn start:ethernaut

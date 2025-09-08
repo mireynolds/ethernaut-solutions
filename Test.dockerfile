@@ -4,13 +4,6 @@ FROM ghcr.io/foundry-rs/foundry
 # Copy our source code into the container
 WORKDIR /app
 
-# Find foundry files
-# [submodule "lib/forge-std"]
-#	path = lib/forge-std
-#	url = https://github.com/foundry-rs/forge-std
-#	branch = master
-# RUN git submodule add --name "lib/forge-std" --path "lib/forge-std" --url "https://github.com/foundry-rs/forge-std" --branch "master"
-
 # Init Foundry Project
 RUN forge init ./
 
