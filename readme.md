@@ -80,3 +80,9 @@ The corresponding script formats all the solidity files tracked by git in this r
 ```bash
 ./forgefmt.sh
 ```
+
+## Licensing
+
+- **This repository’s code** (tests, scripts, dockerfiles) is licensed under **MIT**. See [LICENSE](LICENSE).
+- **Ethernaut** is used only at runtime inside the Docker environment and is licensed under **AGPL-3.0** by its authors. Source: https://github.com/OpenZeppelin/ethernaut
+- **Foundry** is used as a development tool (MIT and Apache-2.0). Source: https://github.com/foundry-rs/foundry
