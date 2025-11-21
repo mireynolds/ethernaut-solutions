@@ -1,10 +1,10 @@
-# Based on Node.js 20 and Debian Bullseye
-FROM node:20-bullseye
+# Based on Node.js 20 and Debian Bookworm
+FROM node:20-bookworm
 
 WORKDIR /app
 
 # Enable Yarn
-RUN corepack enable && corepack prepare yarn@1.22.22 --activate
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 # Clone Ethernaut source
 RUN git clone https://github.com/OpenZeppelin/ethernaut.git ./
@@ -37,6 +37,7 @@ RUN yarn compile:contracts
 
 # Start RPC, deploy contracts, then run the UI
 # We also log deployed addresses to ./addresses.log in the user directory
-CMD yarn network -- --host 0.0.0.0 --port 8545 & \
+CMD set -e; \
+    ANVIL_IP_ADDR=0.0.0.0 yarn network & \
     yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
     yarn start:ethernaut
