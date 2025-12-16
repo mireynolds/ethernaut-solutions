@@ -36,7 +36,7 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 RUN yarn compile:contracts
 
 # Start RPC, deploy contracts, then run the UI
-# We also log deployed addresses to ./addresses.log in the user directory
+# We also log deployed addresses to ./addresses/addresses.log in the user directory
 CMD set -e; \
     ANVIL_IP_ADDR=0.0.0.0 yarn network & \
     yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
