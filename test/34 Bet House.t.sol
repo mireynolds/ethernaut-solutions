@@ -46,7 +46,6 @@ contract Level34Test is EthernautTest {
 
         // Withdraw deposit tokens before wrapped tokens are burned
         pool.withdrawAll();
- 
 
         require(_submitLevel("34"));
     }
