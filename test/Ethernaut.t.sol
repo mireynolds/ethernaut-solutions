@@ -19,7 +19,7 @@ contract EthernautTest is Test {
 
     function _getAddress(string memory _addressCode) internal view returns (address _address) {
         // Read addresses.log and parse ethernaut address
-        string memory addressesJson = vm.readFile("addresses.log");
+        string memory addressesJson = vm.readFile("./addresses.log");
         _address = vm.parseJsonAddress(addressesJson, string.concat(".", _addressCode));
     }
 

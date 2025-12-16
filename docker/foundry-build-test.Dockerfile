@@ -18,7 +18,7 @@ RUN echo 'fs_permissions = [{ access = "read", path = "./"}]' >> foundry.toml
 
 # Build and test the source code
 COPY test/ /app/test/
-COPY addresses.log /app/addresses.log
+COPY addresses/addresses.log /app/addresses.log
 RUN forge build
 RUN forge test -vvvvv --fork-url "$RPC_URL" --suppress-successful-traces
 

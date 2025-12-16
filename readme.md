@@ -16,8 +16,10 @@ Solutions are given for each level. However, some of the levels have many possib
 ## Repository Structure
 
 - **`test/`** Foundry tests, one per Ethernaut level.
-- **`test/Ethernaut.t.sol`** Provides the base test for interacting with Ethernaut in this way.
-- **`./`** Contains the scripts and Dockerfiles detailed below.
+- **`test/Ethernaut.t.sol`** Provides the base test for creating foundry test solutions for Ethernaut.
+- **`docker/`** Contains the Dockerfiles used in the repository.
+- **`level{n}`** Contains additional code used to solve a level.
+- **`./ethernaut`** Is a bash dispatcher for launching Ethernaut, tests, and other repository functions.
 
 ## Getting Started
 
@@ -33,16 +35,16 @@ Solutions are given for each level. However, some of the levels have many possib
 git clone https://github.com/mireynolds/ethernaut-solutions && cd ethernaut-solutions
 ```
 
-### Grant permissions to run the scripts
+### Grant permissions to run the ethernaut dispatcher and set a local path for the dispatcher
 
 ```bash
-chmod +x launch.sh test.sh level13.sh forgefmt.sh
+chmod +x ethernaut && PATH="$PWD:$PATH"
 ```
 
 ### Launch Local Ethernaut (Web UI + RPC)
 
 ```bash
-./launch.sh
+ethernaut launch
 ```
 
 - RPC at http://localhost:8545 with Ethernaut deployed.
@@ -51,10 +53,14 @@ chmod +x launch.sh test.sh level13.sh forgefmt.sh
 
 These are both contained within one docker container.
 
+Logs can be viewed with `ethernaut logs`.
+
+The app and RPC are not persistent. They can be stopped with `ethernaut stop`.
+
 ### Run Foundry Tests
 
 ```bash
-./test.sh
+ethernaut test
 ```
 
 Runs all the foundry tests in `test/` using a Foundry build and test docker image.
@@ -68,7 +74,17 @@ It was useful to use the Foundry debugger to solve this level.
 The corresponding script enters the Foundry debugger using a docker image for that test.
 
 ```bash
-./level13.sh
+ethernaut level13_debug
+```
+
+### Level 35
+
+It was necessary to construct a hash and signature pairing for this level.
+
+The following command uses docker build to calculate such a pairing. The associated code is in `./level35/`.
+
+```bash
+ethernaut level35_a11ce
 ```
 
 ### Forge formatting
@@ -78,11 +94,11 @@ The Solidity files in this repository have been formatted with the Foundry forma
 The corresponding script formats all the solidity files tracked by git in this repository inside a foundry docker image.
 
 ```bash
-./forgefmt.sh
+ethernaut forge_fmt
 ```
 
 ## Licensing
 
-- **This repository’s code** (tests, scripts, dockerfiles) is licensed under **MIT**. See [LICENSE](LICENSE).
+- **This repository’s code** (tests, scripts, Dockerfiles) is licensed under **MIT**. See [LICENSE](LICENSE).
 - **Ethernaut** is used only at runtime inside the Docker environment and is licensed under **AGPL-3.0** by its authors. Source: https://github.com/OpenZeppelin/ethernaut
 - **Foundry** is used as a development tool (MIT and Apache-2.0). Source: https://github.com/foundry-rs/foundry
