@@ -67,14 +67,14 @@ Runs all the foundry tests in `test/` using a Foundry build and test docker imag
 
 ## Other Scripts
 
-### Level 13
+### Foundry Debugger
 
-It was useful to use the Foundry debugger to solve this level.
+It was useful to use the Foundry debugger to solve level 13 and 36.
 
 The corresponding script enters the Foundry debugger using a docker image for that test.
 
 ```bash
-ethernaut level13_debug
+ethernaut forge_debug_level 13
 ```
 
 ### Level 35

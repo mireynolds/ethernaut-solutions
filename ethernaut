@@ -16,14 +16,14 @@ Usage:
   ethernaut <command>
 
 Commands:
-  launch         Runs Ethernaut app and RPC in a local docker container.
-  stop           Stops the Ethernaut app and RPC (if running).
-  logs           Follow logs from the Ethernaut app and RPC.
-  test           Test the Ethernaut solutions by building a docker image.
-  forge_fmt      Format tracked Solidity files using forge fmt in a docker container.
-  level13_debug  Runs the level13 test with the forge debugger in a docker container.
-  level35_a11ce  Builds a docker image calculating which logs a hash and signature pair for Alice.
-  help           Show this help.
+  launch                Runs Ethernaut app and RPC in a local docker container.
+  stop                  Stops the Ethernaut app and RPC (if running).
+  logs                  Follow logs from the Ethernaut app and RPC.
+  test                  Test the Ethernaut solutions by building a docker image.
+  forge_fmt             Format tracked Solidity files using forge fmt in a docker container.
+  forge_debug_level 13  Runs the level13 test with the forge debugger in a docker container.
+  level35_a11ce         Builds a docker image calculating which logs a hash and signature pair for Alice.
+  help                  Show this help.
 
 EOF
 }
@@ -75,14 +75,16 @@ forge_fmt() {
     -lc 'git ls-files -z -- "*.sol" | xargs -0 -r forge fmt'
 }
 
-level13_debug() {
-  docker image inspect "$FOUNDRY_TEST_IMAGE" >/dev/null 2>&1 || build_test_image
+forge_debug_level() {
+  local level="$1"
+
+  docker image inspect "$FOUNDRY_TEST_IMAGE" >/dev/null 2>&1 || build_foundry_test_image
 
   docker run --rm \
     -it \
     --add-host "$DOCKER_HOST" \
     --entrypoint /bin/bash "$FOUNDRY_TEST_IMAGE" \
-    -lc 'forge test --debug --match-test "testLevel13" --fork-url http://host.docker.internal:8545'
+    -lc "forge test --debug --match-test testLevel${level} --fork-url http://host.docker.internal:8545"
 }
 
 level35_a11ce() {
@@ -101,7 +103,7 @@ case "$cmd" in
   logs) logs ;;
   test) test ;;
   forge_fmt) forge_fmt ;;
-  level13_debug) level13_debug ;;
+  forge_debug_level) forge_debug_level "$1" ;;
   level35_a11ce) level35_a11ce ;;
   help|-h|--help) usage ;;
   *)
