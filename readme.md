@@ -38,13 +38,13 @@ git clone https://github.com/mireynolds/ethernaut-solutions && cd ethernaut-solu
 ### Grant permissions to run the ethernaut dispatcher and set a local path for the dispatcher
 
 ```bash
-chmod +x ethernaut && PATH="$PWD:$PATH"
+chmod +x ethernaut
 ```
 
 ### Launch Local Ethernaut (Web UI + RPC)
 
 ```bash
-ethernaut launch
+./ethernaut launch
 ```
 
 - RPC at http://localhost:8545 with Ethernaut deployed.
@@ -53,14 +53,14 @@ ethernaut launch
 
 These are both contained within one docker container.
 
-Logs can be viewed with `ethernaut logs`.
+Logs can be viewed with `./ethernaut logs`.
 
-The app and RPC are not persistent. They can be stopped with `ethernaut stop`.
+The app and RPC are not persistent. They can be stopped with `./ethernaut stop`.
 
 ### Run Foundry Tests
 
 ```bash
-ethernaut test
+./ethernaut test
 ```
 
 Runs all the foundry tests in `test/` using a Foundry build and test docker image.
@@ -74,17 +74,19 @@ It was useful to use the Foundry debugger to solve level 13 and 36.
 The corresponding script enters the Foundry debugger using a docker image for that test.
 
 ```bash
-ethernaut forge_debug_level 13
+./ethernaut forge_debug_level 13
 ```
 
-### Level 35
+### Level 35 and 37
 
-It was necessary to construct a hash and signature pairing for this level.
+For level 35, it was necessary to construct a hash and signature pairing for this level.
 
-The following command uses docker build to calculate such a pairing. The associated code is in `./level35/`.
+The following command uses docker build to calculate such a pairing. The associated code is in `./ecdsa/`.
+
+There is also a corresponding test for level 37.
 
 ```bash
-ethernaut level35_a11ce
+./ethernaut ecdsa
 ```
 
 ### Forge formatting
@@ -94,7 +96,7 @@ The Solidity files in this repository have been formatted with the Foundry forma
 The corresponding script formats all the solidity files tracked by git in this repository inside a foundry docker image.
 
 ```bash
-ethernaut forge_fmt
+./ethernaut forge_fmt
 ```
 
 ## Licensing

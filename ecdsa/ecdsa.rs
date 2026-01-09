@@ -8,7 +8,7 @@ use k256::{
     ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey},
     elliptic_curve::{
         Field, FieldBytes, bigint::U256 as BigUint256, ff::PrimeField, group::Group, ops::Reduce,
-        point::AffineCoordinates,
+        point::AffineCoordinates, sec1::ToEncodedPoint
     },
 };
 
@@ -95,8 +95,33 @@ pub fn compute_x_mod_n_from_pubkey_bytes(
     Ok(x_mod_n)
 }
 
+// Reduce any bytes32 value to secp256k1 curve order n into a Scalar.
+fn bytes32_to_scalar_mod_n(bytes: [u8; 32]) -> Scalar {
+    // Set FieldBytes to Secp256k1 "field bytes" container
+    let fb: FieldBytes<Secp256k1> = bytes.into();
+
+    // Reduce the bytes mod curve order n (Scalar field)
+    <Scalar as Reduce<BigUint256>>::reduce_bytes(&fb)
+}
+
+// Convert an U256 into a Scalar by reducing mod n.
+pub fn u256_to_scalar_mod_n(x: U256) -> Scalar {
+    let mut be = [0u8; 32];
+    x.to_big_endian(&mut be);
+    bytes32_to_scalar_mod_n(be)
+}
+
+// Convert an H256 into a Scalar by reducing mod n.
+pub fn h256_to_scalar_mod_n(x: H256) -> Scalar {
+    let mut be = [0u8; 32];
+    be.copy_from_slice(x.as_bytes());
+    bytes32_to_scalar_mod_n(be)
+}
+
 #[tokio::test]
-async fn find_signature_that_recovers_to_a11ce() {
+async fn level_35_find_signature_that_recovers_to_a11ce() {
+    // This test generates a signature that can be used in level 35.
+
     let expected: Address = "0xA11CE84AcB91Ac59B0A4E2945C9157eF3Ab17D4e"
         .parse()
         .unwrap();
@@ -193,7 +218,70 @@ async fn find_signature_that_recovers_to_a11ce() {
     }
 
     // Prints out a successful hash and signature that recovers to Alice's address.
+    println!("Level 35");
     println!("hash: 0x{}", hex::encode(hash.as_bytes()));
     println!("signature: 0x{}", hex::encode(sig.to_vec()));
     println!("recovered: {:?}", recovered);
+}
+
+#[tokio::test]
+async fn level_37_find_d_for_reused_r() {
+    // Using the reused r values from level 37.
+    let r = U256::from_dec_str(
+        "103757219997015733207792601658906671456879056669062135265261565095369865575488",
+    ).unwrap();
+
+    let s_1 = U256::from_dec_str(
+        "50663344087995949762213388216373125606572599093254664098885226352774073366499",
+    ).unwrap();
+
+    let s_2 = U256::from_dec_str(
+        "34479580352079828831740340677067427602009569782867523588952791137270191524473",
+    ).unwrap();
+
+    let e_1: H256 = "0x937fa99fb61f6cd81c00ddda80cc218c11c9a731d54ce8859cb2309c77b79bf3"
+        .parse()
+        .unwrap();
+
+    let e_2: H256 = "0x6a0d6cd0c2ca5d901d94d52e8d9484e4452a3668ae20d63088909611a7dccc51"
+        .parse()
+        .unwrap();
+
+    let expected: Address = "0x03E2cf81BBE61D1fD1421aFF98e8605a5A9e953a"
+        .parse()
+        .unwrap();
+
+    // Convert to scalars.
+    let r_scalar = u256_to_scalar_mod_n(r);
+    let s1_scalar = u256_to_scalar_mod_n(s_1);
+    let s2_scalar = u256_to_scalar_mod_n(s_2);
+    let e1_scalar = h256_to_scalar_mod_n(e_1);
+    let e2_scalar = h256_to_scalar_mod_n(e_2);
+
+    // Calculate k.
+    let k_scalar = Some((e1_scalar - e2_scalar) * (s1_scalar - s2_scalar).invert().unwrap()).unwrap();
+
+    // Calculate d.
+    let d_scalar = Some((s1_scalar * k_scalar - e1_scalar) * r_scalar.invert().unwrap()).unwrap();
+
+    // Derive public key from d.
+    let pubkey_point = ProjectivePoint::GENERATOR * d_scalar;
+    let pubkey_affine = AffinePoint::from(pubkey_point);
+    let pubkey = PublicKey::from_affine(pubkey_affine).unwrap();
+    let pubkey_bytes = pubkey.to_encoded_point(false).as_bytes().to_owned();
+
+    // Check that the derived public key matches the expected address.
+    let derived_address = {
+        let hash = ethers_core::utils::keccak256(&pubkey_bytes[1..]);
+        Address::from_slice(&hash[12..])
+    }; 
+
+    assert_eq!(derived_address, expected);
+
+    // Get d_bytes value.
+    let d_bytes: [u8; 32] = d_scalar.to_repr().into();
+
+    // Prints out a successful key.
+    println!("Level 37");
+    println!("key: 0x{}", hex::encode(d_bytes));
 }
