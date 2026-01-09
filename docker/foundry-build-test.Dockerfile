@@ -23,4 +23,4 @@ RUN forge build
 RUN forge test -vvvvv --fork-url "$RPC_URL" --suppress-successful-traces
 
 # Make the image convenient for interactive use (debugger)
-ENTRYPOINT ["/bin/bash","-lc"]
+ENTRYPOINT ["/bin/bash","-c"]

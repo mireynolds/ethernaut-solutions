@@ -20,6 +20,9 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:${PATH}"
 RUN foundryup
 
+# Compile Foundry contracts
+RUN yarn compile:contracts
+
 # Set ACTIVE_NETWORK to NETWORKS.LOCAL
 RUN sed -i '/let id_to_network = {}/i export const ACTIVE_NETWORK = NETWORKS.LOCAL;' client/src/constants.js
 
@@ -32,12 +35,11 @@ EXPOSE 8545
 # Set NODE_OPTIONS to use legacy OpenSSL provider
 ENV NODE_OPTIONS="--openssl-legacy-provider"
 
-# Compile Foundry contracts
-RUN yarn compile:contracts
-
 # Start RPC, deploy contracts, then run the UI
-# We also log deployed addresses to ./addresses/addresses.log in the user directory
-CMD set -e; \
+CMD ["/bin/bash", \
+    "-c", \
+    "set -e; \
     ANVIL_IP_ADDR=0.0.0.0 yarn network & \
-    yes | CI=true yarn deploy:contracts && ls -l /app/client/src/gamedata && cp /app/client/src/gamedata/deploy.local.json /addresses/addresses.log && \
-    yarn start:ethernaut
+    yes | CI=true yarn deploy:contracts && \
+    exec yarn start:ethernaut" \
+]
