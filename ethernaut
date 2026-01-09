@@ -48,7 +48,6 @@ build_foundry_test_image() {
 }
 
 wait_for_addresses_log() {
-  local container="$1"
   local src="/app/client/src/gamedata/deploy.local.json"
   local dst="$REPO_ROOT/addresses/addresses.log"
   local timeout="${2:-300}"
@@ -59,13 +58,13 @@ wait_for_addresses_log() {
 
   while :; do
     # File exists inside container, copy and return success
-    if docker exec "$container" test -f "$src" 2>/dev/null; then
-      docker cp "$container:$src" "$dst"
+    if docker exec "$ETHERNAUT_CONTAINER" test -f "$src" 2>/dev/null; then
+      docker cp "$ETHERNAUT_CONTAINER:$src" "$dst"
       return 0
     fi
 
     # Container is no longer running, return fail
-    if ! docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null | grep -q true; then
+    if ! docker inspect -f '{{.State.Running}}' "$ETHERNAUT_CONTAINER" 2>/dev/null | grep -q true; then
       echo "Container exited before addresses file was created" >&2
       return 1
     fi
