@@ -48,7 +48,7 @@ contract Level36Test is EthernautTest {
         // This issue with this level is that it assumes that EOAs cannot reenter mintNFTEOA().
         // However, EIP 7702 allows EOAs to sign delegations to contracts.
         // This means we use the onERC721Received reentry method, but from an EOA.
-        // This means we can mint as ourselves as many NFTs as the gas limit allows.
+        // This means we can mint ourselves as many NFTs as the gas limit allows.
 
         // Lets generate a random EOA for us to use for this level, as if we were using an EOA.
         (address eoa, uint256 eoaKey) = makeAddrAndKey("eoa");

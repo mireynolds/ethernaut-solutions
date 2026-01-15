@@ -38,8 +38,14 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 # Start RPC, deploy contracts, then run the UI
 CMD ["/bin/bash", \
     "-c", \
-    "set -e; \
-    ANVIL_IP_ADDR=0.0.0.0 yarn network & \
-    yes | CI=true yarn deploy:contracts && \
-    exec yarn start:ethernaut" \
+    "set -euo pipefail; \
+    trap 'kill 0' INT TERM; \
+    cd contracts; \
+    anvil \
+    --host ${ANVIL_IP_ADDR:-0.0.0.0} \
+    --port ${ANVIL_PORT:-8545} \
+    --block-time 1 \
+    --auto-impersonate \
+    --state ${ANVIL_STATE_PATH:-/data/anvil-state.json} \
+    --state-interval ${ANVIL_STATE_INTERVAL:-5}" \
 ]

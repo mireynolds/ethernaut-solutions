@@ -2,12 +2,24 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 cd "$REPO_ROOT"
 
 DOCKER_HOST="host.docker.internal:host-gateway"
 FOUNDRY_TEST_IMAGE="foundry-build-test"
+FOUNDRY_IMAGE_LATEST="ghcr.io/foundry-rs/foundry:latest"
+ECDSA_TEST_IMAGE="ecdsa-build-test"
 ETHERNAUT_IMAGE="ethernaut-run"
 ETHERNAUT_CONTAINER="ethernaut"
+ETHERNAUT_DATA_VOLUME="ethernaut-data"
+
+LOCAL_IP="127.0.0.1"
+UI_PORT="3000"
+
+ANVIL_IP_ADDR="0.0.0.0"
+ANVIL_PORT="8545"
+ANVIL_STATE_PATH="/data/anvil-state.json"
+ANVIL_STATE_INTERVAL="5"
 
 DOCKER_FLAGS=(
   --cap-drop=ALL
@@ -24,8 +36,10 @@ Usage:
   ./ethernaut <command>
 
 Commands:
-  launch                Runs Ethernaut app and RPC in a local docker container.
+  launch                Runs Ethernaut app and RPC in a local docker container (also deletes existing container and volume).
+  start                 Starts the Ethernaut app and RPC (if stopped).
   stop                  Stops the Ethernaut app and RPC (if running).
+  delete                Deletes existing Ethernaut container and volume.
   logs                  Follow logs from the Ethernaut app and RPC.
   test                  Test the Ethernaut solutions by building a docker image.
   forge_fmt             Format tracked Solidity files using forge fmt in a docker container.
@@ -36,21 +50,37 @@ Commands:
 EOF
 }
 
-build_ethernaut_image() {
-  docker build -f "$REPO_ROOT/docker/$ETHERNAUT_IMAGE.Dockerfile" \
-    -t "$ETHERNAUT_IMAGE" .
-}
-
 build_foundry_test_image() {
   docker build -f "$REPO_ROOT/docker/$FOUNDRY_TEST_IMAGE.Dockerfile" \
     --add-host "$DOCKER_HOST" \
     -t "$FOUNDRY_TEST_IMAGE" .
 }
 
+wait_for_rpc() {
+  local timeout="${1:-60}"
+  local start now
+  start="$(date +%s)"
+
+  while :; do
+    if docker exec "$ETHERNAUT_CONTAINER" bash -lc \
+      "curl -sS -H 'content-type: application/json' --data '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}' http://${LOCAL_IP}:${ANVIL_PORT} | grep -q '\"result\"'"; then
+      return 0
+    fi
+
+    now="$(date +%s)"
+    if (( now - start > timeout )); then
+      echo "Timed out waiting for Anvil RPC on ${LOCAL_IP}:${ANVIL_PORT}" >&2
+      return 1
+    fi
+
+    sleep 1
+  done
+}
+
 wait_for_addresses_log() {
   local src="/app/client/src/gamedata/deploy.local.json"
   local dst="$REPO_ROOT/addresses/addresses.log"
-  local timeout="${2:-300}"
+  local timeout="${1:-300}"
   local start now
 
   mkdir -p "$(dirname "$dst")"
@@ -80,20 +110,83 @@ wait_for_addresses_log() {
   done
 }
 
+confirm_reset() {
+  echo "An existing Ethernaut environment was detected."
+  echo "This will RESET the chain and delete all deployed contracts."
+  read -r -p "Continue? [y/N] " reply
+  case "$reply" in
+    y|Y|yes|YES) return 0 ;;
+    *) echo "Aborted."; return 1 ;;
+  esac
+}
 
-launch() {
-  build_ethernaut_image
+delete() {
+  # Warn if container or volume already exists
+  if docker inspect "$ETHERNAUT_CONTAINER" >/dev/null 2>&1 \
+     || docker volume inspect "$ETHERNAUT_DATA_VOLUME" >/dev/null 2>&1; then
+    confirm_reset || return 1
+  fi
+
+  stop
 
   docker rm -f "$ETHERNAUT_CONTAINER" >/dev/null 2>&1 || true
 
+  docker rmi -f "$ETHERNAUT_IMAGE" >/dev/null 2>&1 || true
+
+  docker rmi -f "$FOUNDRY_TEST_IMAGE" >/dev/null 2>&1 || true
+
+  docker rmi -f "$FOUNDRY_IMAGE_LATEST" >/dev/null 2>&1 || true
+
+  docker rmi -f "$ECDSA_TEST_IMAGE" >/dev/null 2>&1 || true
+
+  docker volume rm "$ETHERNAUT_DATA_VOLUME" >/dev/null 2>&1 || true
+}
+
+launch() {
+  delete
+
+  docker build -f "$REPO_ROOT/docker/$ETHERNAUT_IMAGE.Dockerfile" \
+    -t "$ETHERNAUT_IMAGE" .
+  
+  docker volume create "$ETHERNAUT_DATA_VOLUME" >/dev/null 2>&1
+
   docker run -d \
     --name "$ETHERNAUT_CONTAINER" \
-    -p 127.0.0.1:3000:3000 \
-    -p 127.0.0.1:8545:8545 \
+    -p "${LOCAL_IP}:${UI_PORT}:${UI_PORT}" \
+    -p "${LOCAL_IP}:${ANVIL_PORT}:${ANVIL_PORT}" \
+    -v "$ETHERNAUT_DATA_VOLUME":/data \
+    -e ANVIL_IP_ADDR="$ANVIL_IP_ADDR" \
+    -e ANVIL_PORT="$ANVIL_PORT" \
+    -e ANVIL_STATE_PATH="$ANVIL_STATE_PATH" \
+    -e ANVIL_STATE_INTERVAL="$ANVIL_STATE_INTERVAL" \
     "${DOCKER_FLAGS[@]}" \
     "$ETHERNAUT_IMAGE"
-  
-  wait_for_addresses_log "$ETHERNAUT_CONTAINER"
+
+  wait_for_rpc
+
+  docker exec "$ETHERNAUT_CONTAINER" bash -c 'yes | CI=true yarn deploy:contracts'
+
+  docker exec -d "$ETHERNAUT_CONTAINER" bash -c 'yarn start:ethernaut'
+
+  wait_for_addresses_log
+}
+
+start() {
+  if ! docker inspect "$ETHERNAUT_CONTAINER" >/dev/null 2>&1; then
+    echo "Container '$ETHERNAUT_CONTAINER' does not exist. Run launch." >&2
+    return 1
+  fi
+
+  if docker inspect -f '{{.State.Running}}' "$ETHERNAUT_CONTAINER" 2>/dev/null | grep -q true; then
+    echo "Container '$ETHERNAUT_CONTAINER' is already running." >&2
+    return 1
+  fi
+
+  docker start "$ETHERNAUT_CONTAINER" >/dev/null 2>&1 || return 1
+
+  wait_for_rpc
+
+  docker exec -d "$ETHERNAUT_CONTAINER" bash -c 'yarn start:ethernaut'
 }
 
 stop() {
@@ -117,7 +210,7 @@ forge_fmt() {
     -v "$REPO_ROOT/test":/work/test:rw \
     -w /work \
     --entrypoint bash \
-    ghcr.io/foundry-rs/foundry:latest \
+    $FOUNDRY_IMAGE_LATEST \
     -c 'git ls-files -z -- "*.sol" | xargs -0 -r forge fmt'
 }
 
@@ -139,7 +232,7 @@ ecdsa() {
     docker build --no-cache \
     --progress=plain \
     -f "$REPO_ROOT/docker/ecdsa-build-test.Dockerfile" \
-    -t ecdsa ./ecdsa
+    -t "$ECDSA_TEST_IMAGE" ./ecdsa
 }
 
 cmd="${1:-help}"
@@ -147,7 +240,9 @@ shift || true
 
 case "$cmd" in
   launch) launch ;;
+  start) start ;;
   stop) stop ;;
+  delete) delete ;;
   logs) logs ;;
   test) test ;;
   forge_fmt) forge_fmt ;;
