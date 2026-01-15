@@ -18,7 +18,7 @@ Solutions are given for each level. However, some of the levels have many possib
 - **`test/`** Foundry tests, one per Ethernaut level.
 - **`test/Ethernaut.t.sol`** Provides the base test for creating foundry test solutions for Ethernaut.
 - **`docker/`** Contains the Dockerfiles used in the repository.
-- **`level{n}`** Contains additional code used to solve a level.
+- **`ecdsa/`** Contains additional code used to solve levels involing ECDSA signatures.
 - **`./ethernaut`** Is a bash dispatcher for launching Ethernaut, tests, and other repository functions.
 
 ## Getting Started
@@ -55,7 +55,9 @@ These are both contained within one docker container.
 
 Logs can be viewed with `./ethernaut logs`.
 
-The app and RPC are not persistent. They can be stopped with `./ethernaut stop`.
+The app and RPC are persistent, if desired. They can be started and stopped with `./ethernaut start` and `./ethernaut stop` respectively.
+
+The local chain, persistant data, and containers used across workflows from this repository can be deleted with `./ethernaut delete`.
 
 ### Run Foundry Tests
 
