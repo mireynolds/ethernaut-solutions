@@ -1,0 +1,13 @@
+[package]
+name = "mpt"
+version = "0.0.1"
+edition = "2024"
+
+[dev-dependencies]
+alloy-primitives = "1.5.4"
+alloy-rlp = "0.3.12"
+alloy-trie = "0.9.3"
+alloy-consensus = "1.5.2"
+nybbles = "0.4.7"
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
+hex = "0.4.3"

@@ -18,7 +18,8 @@ Solutions are given for each level. However, some of the levels have many possib
 - **`test/`** Foundry tests, one per Ethernaut level.
 - **`test/Ethernaut.t.sol`** Provides the base test for creating foundry test solutions for Ethernaut.
 - **`docker/`** Contains the Dockerfiles used in the repository.
-- **`ecdsa/`** Contains additional code used to solve levels involing ECDSA signatures.
+- **`ecdsa/`** Contains additional code used to solve levels involving ECDSA signatures.
+- **`mpt/`** Contains additional code used to solve levels involving merkle patricia tries.
 - **`./ethernaut`** Is a bash dispatcher for launching Ethernaut, tests, and other repository functions.
 
 ## Getting Started
@@ -57,7 +58,7 @@ Logs can be viewed with `./ethernaut logs`.
 
 The app and RPC are persistent, if desired. They can be started and stopped with `./ethernaut start` and `./ethernaut stop` respectively.
 
-The local chain, persistant data, and containers used across workflows from this repository can be deleted with `./ethernaut delete`.
+The local chain, persistent data, and containers used across workflows from this repository can be deleted with `./ethernaut delete`.
 
 ### Run Foundry Tests
 
@@ -89,6 +90,16 @@ There is also a corresponding test for level 37.
 
 ```bash
 ./ethernaut ecdsa
+```
+
+### Level 40
+
+For level 40, it was necessary to construct a merkle patricia trie.
+
+The following command uses docker build to calculate the information needed to complete level 40. The associated code is in `./mpt/`.
+
+```bash
+./ethernaut mpt
 ```
 
 ### Forge formatting

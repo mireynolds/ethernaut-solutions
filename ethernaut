@@ -8,7 +8,9 @@ cd "$REPO_ROOT"
 DOCKER_HOST="host.docker.internal:host-gateway"
 FOUNDRY_TEST_IMAGE="foundry-build-test"
 FOUNDRY_IMAGE_LATEST="ghcr.io/foundry-rs/foundry:latest"
+CARGO_BUILD_TEST_FILE="cargo-build-test.Dockerfile"
 ECDSA_TEST_IMAGE="ecdsa-build-test"
+MPT_TEST_IMAGE="mpt-build-test"
 ETHERNAUT_IMAGE="ethernaut-run"
 ETHERNAUT_CONTAINER="ethernaut"
 ETHERNAUT_DATA_VOLUME="ethernaut-data"
@@ -45,6 +47,7 @@ Commands:
   forge_fmt             Format tracked Solidity files using forge fmt in a docker container.
   forge_debug_level 13  Runs the level13 test with the forge debugger in a docker container.
   ecdsa                 Builds a docker image calculating ecdsa artifacts for levels 35 and 37.
+  mpt                   Builds a docker image calculating mpt artifacts for level 40.
   help                  Show this help.
 
 EOF
@@ -231,8 +234,17 @@ forge_debug_level() {
 ecdsa() {
     docker build --no-cache \
     --progress=plain \
-    -f "$REPO_ROOT/docker/ecdsa-build-test.Dockerfile" \
+    -f "$REPO_ROOT/docker/$CARGO_BUILD_TEST_FILE" \
+    --build-arg TEST_FILE=ecdsa.rs \
     -t "$ECDSA_TEST_IMAGE" ./ecdsa
+}
+
+mpt() {
+    docker build --no-cache \
+    --progress=plain \
+    -f "$REPO_ROOT/docker/$CARGO_BUILD_TEST_FILE" \
+    --build-arg TEST_FILE=mpt.rs \
+    -t "$MPT_TEST_IMAGE" ./mpt
 }
 
 cmd="${1:-help}"
@@ -248,6 +260,7 @@ case "$cmd" in
   forge_fmt) forge_fmt ;;
   forge_debug_level) forge_debug_level "$1" ;;
   ecdsa) ecdsa ;;
+  mpt) mpt ;;
   help|-h|--help) usage ;;
   *)
     echo "Unknown command: $cmd" >&2
