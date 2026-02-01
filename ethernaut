@@ -220,6 +220,7 @@ test() {
 forge_fmt() {
   docker run --rm \
     --network=none \
+    --read-only \
     "${DOCKER_FLAGS[@]}" \
     -u "$(id -u):$(id -g)" \
     -v "$REPO_ROOT":/work:ro \

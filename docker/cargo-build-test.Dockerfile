@@ -1,6 +1,14 @@
 FROM rust:1.93.0-slim-bookworm
 
+# Create non root user
+RUN useradd -m -u 1000 rustacean
+
+# Create workdir and set permissions
 WORKDIR /app
+RUN mkdir -p /app && chown -R rustacean:rustacean /app
+
+# Switch user
+USER rustacean
 
 # Arg to pick integration to run
 ARG TEST
