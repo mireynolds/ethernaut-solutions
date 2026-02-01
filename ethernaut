@@ -7,7 +7,7 @@ cd "$REPO_ROOT"
 
 DOCKER_HOST="host.docker.internal:host-gateway"
 FOUNDRY_TEST_IMAGE="foundry-build-test"
-FOUNDRY_IMAGE_LATEST="ghcr.io/foundry-rs/foundry:latest"
+FOUNDRY_IMAGE="ghcr.io/foundry-rs/foundry:v1.6.0-rc1"
 CARGO_BUILD_TEST_FILE="cargo-build-test.Dockerfile"
 ECDSA_TEST_IMAGE="ecdsa-build-test"
 MPT_TEST_IMAGE="mpt-build-test"
@@ -54,6 +54,10 @@ EOF
 }
 
 build_foundry_test_image() {
+  wait_for_addresses_log
+
+  [ -f "$REPO_ROOT/logs/level_40.log" ] || (echo "Running 'mpt' to generate level 40 artifacts" && mpt)
+
   docker build -f "$REPO_ROOT/docker/$FOUNDRY_TEST_IMAGE.Dockerfile" \
     --add-host "$DOCKER_HOST" \
     -t "$FOUNDRY_TEST_IMAGE" .
@@ -82,7 +86,7 @@ wait_for_rpc() {
 
 wait_for_addresses_log() {
   local src="/app/client/src/gamedata/deploy.local.json"
-  local dst="$REPO_ROOT/addresses/addresses.log"
+  local dst="$REPO_ROOT/logs/addresses.log"
   local timeout="${1:-300}"
   local start now
 
@@ -138,11 +142,20 @@ delete() {
 
   docker rmi -f "$FOUNDRY_TEST_IMAGE" >/dev/null 2>&1 || true
 
-  docker rmi -f "$FOUNDRY_IMAGE_LATEST" >/dev/null 2>&1 || true
+  docker rmi -f "$FOUNDRY_IMAGE" >/dev/null 2>&1 || true
 
   docker rmi -f "$ECDSA_TEST_IMAGE" >/dev/null 2>&1 || true
 
+  docker rmi -f "$MPT_TEST_IMAGE" >/dev/null 2>&1 || true
+
   docker volume rm "$ETHERNAUT_DATA_VOLUME" >/dev/null 2>&1 || true
+
+  rm -f "$REPO_ROOT/logs/addresses.log" >/dev/null 2>&1 || true
+
+  rm -f "$REPO_ROOT/logs/level_40.log" >/dev/null 2>&1 || true
+
+  rmdir "$REPO_ROOT/logs/" >/dev/null 2>&1 || true
+  
 }
 
 launch() {
@@ -213,7 +226,7 @@ forge_fmt() {
     -v "$REPO_ROOT/test":/work/test:rw \
     -w /work \
     --entrypoint bash \
-    $FOUNDRY_IMAGE_LATEST \
+    $FOUNDRY_IMAGE \
     -c 'git ls-files -z -- "*.sol" | xargs -0 -r forge fmt'
 }
 
@@ -235,16 +248,19 @@ ecdsa() {
     docker build --no-cache \
     --progress=plain \
     -f "$REPO_ROOT/docker/$CARGO_BUILD_TEST_FILE" \
-    --build-arg TEST_FILE=ecdsa.rs \
-    -t "$ECDSA_TEST_IMAGE" ./ecdsa
+    --build-arg TEST=ecdsa \
+    -t "$ECDSA_TEST_IMAGE" .
 }
 
 mpt() {
     docker build --no-cache \
     --progress=plain \
     -f "$REPO_ROOT/docker/$CARGO_BUILD_TEST_FILE" \
-    --build-arg TEST_FILE=mpt.rs \
-    -t "$MPT_TEST_IMAGE" ./mpt
+    --build-arg TEST=mpt \
+    -t "$MPT_TEST_IMAGE" .
+    local id=$(docker create "$MPT_TEST_IMAGE")
+    docker cp "$id:/app/level_40.log" "$REPO_ROOT/logs/level_40.log"
+    docker rm "$id"
 }
 
 cmd="${1:-help}"

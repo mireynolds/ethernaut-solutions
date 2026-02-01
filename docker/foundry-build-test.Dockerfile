@@ -1,5 +1,5 @@
 # Use the latest foundry image
-FROM ghcr.io/foundry-rs/foundry
+FROM ghcr.io/foundry-rs/foundry:v1.6.0-rc1
  
 # Copy our source code into the container
 WORKDIR /app
@@ -14,11 +14,12 @@ RUN forge build --use solc:0.8.30
 ARG RPC_URL=http://host.docker.internal:8545
 
 # Allow reading local files in container
-RUN echo 'fs_permissions = [{ access = "read", path = "./"}]' >> foundry.toml
+RUN echo 'fs_permissions = [{ access = "read", path = "./"},{ access = "read", path = "/app" }]' >> foundry.toml
 
 # Build and test the source code
 COPY test/ /app/test/
-COPY addresses/addresses.log /app/addresses.log
+COPY logs/addresses.log /app/addresses.log
+COPY logs/level_40.log /app/level_40.log
 RUN forge build
 RUN forge test -vvvvv --fork-url "$RPC_URL" --suppress-successful-traces
 
