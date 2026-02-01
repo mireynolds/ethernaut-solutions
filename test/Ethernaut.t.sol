@@ -3,6 +3,7 @@ pragma solidity ^0.8.30;
 
 import "forge-std/Test.sol";
 import "forge-std/console2.sol";
+import "forge-std/StdJson.sol";
 
 interface Ethernaut {
     event LevelInstanceCreatedLog(address indexed player, address indexed instance, address indexed level);

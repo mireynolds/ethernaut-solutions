@@ -25,6 +25,8 @@ interface Level40 {
 
 contract Level40Test is EthernautTest {
     Level40 level40Instance;
+    bytes rlpBlockHeader;
+    using stdJson for string;
 
     function testLevel40() public {
         _createLevel("40");
@@ -48,7 +50,6 @@ contract Level40Test is EthernautTest {
 
         // Lets look at the selectors for these.
         {
-            console2.log("Cat");
             console2.log("Function selectors.");
             console2.log("On message received:");
             console2.logBytes4(bytes4(keccak256("onMessageReceived(bytes)")));
@@ -93,14 +94,24 @@ contract Level40Test is EthernautTest {
         console2.logBytes32(messageHash);
 
         // We will use the Rust mpt crate to construct the MPTs and proofs.
-        // That gives us the following values:
-        bytes32 storageRoot = 0x8e22de56003dff950e3158bb5164ca3ca3adfe167f0b77935925b0540e64467a;
-        bytes32 stateRoot = 0xf7f53ef2d349f5aae171600b6ee1790abf0a14a9d8d31285cd83e83567198140;
-        bytes memory accountRlp =
-            hex"f8440180a08e22de56003dff950e3158bb5164ca3ca3adfe167f0b77935925b0540e64467aa0c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
-        bytes memory storageProof = hex"e5a4e3a12007f5b51a1b9788412635a58f436c56414b6cc3cf268dd71757a2adf26dfc547301";
-        bytes memory stateProof =
-            hex"f86eb86cf86aa120352a47fc6863b89a6b51890ef3c1550d560886c027141d2058ba1e2d4c66d99ab846f8440180a08e22de56003dff950e3158bb5164ca3ca3adfe167f0b77935925b0540e64467aa0c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
+        // Load artifacts produced by Rust
+        bytes32 storageRoot;
+        bytes32 stateRoot;
+        bytes memory accountRlp;
+        bytes memory storageProof;
+        bytes memory stateProof;
+        {
+            string memory path = string.concat(vm.projectRoot(), "/level_40.log");
+            string memory json = vm.readFile(path);
+
+            storageRoot = json.readBytes32(".storage_root");
+            stateRoot = json.readBytes32(".state_root");
+
+            accountRlp = json.readBytes(".account_rlp");
+            storageProof = json.readBytes(".storage_proof_rlp");
+            stateProof = json.readBytes(".state_proof_rlp");
+            rlpBlockHeader = json.readBytes(".rlp_block_header");
+        }
 
         // We can now construct our proof data.
         Level40.ProofData memory proofData = Level40.ProofData({
@@ -138,11 +149,8 @@ contract Level40Test is EthernautTest {
             // We will then use the Rust mpt crate to construct the block header RLP.
         }
 
-        bytes memory rlp_block_header =
-            hex"f901f5a0ed20f024a9b5b75b1dd37fe6c96b829ed766d78103b3ab8f442f3b2ebbc557b9a00000000000000000000000000000000000000000000000000000000000000000940000000000000000000000000000000000000000a0f7f53ef2d349f5aae171600b6ee1790abf0a14a9d8d31285cd83e83567198140a00000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008084039fd3998080845fc6305880a00000000000000000000000000000000000000000000000000000000000000000880000000000000000";
-
         // We can now submit the new block.
-        level40Instance.submitNewBlock_____37278985983(rlp_block_header);
+        level40Instance.submitNewBlock_____37278985983(rlpBlockHeader);
     }
 
     // Lets use the faulty compute hash function from the contract so we generate the same hash.
