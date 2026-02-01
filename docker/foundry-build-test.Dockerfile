@@ -1,5 +1,8 @@
 # Use the latest foundry image
 FROM ghcr.io/foundry-rs/foundry:v1.6.0-rc1
+
+# Make sure user is foundry
+USER foundry
  
 # Copy our source code into the container
 WORKDIR /app
